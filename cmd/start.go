@@ -132,23 +132,22 @@ func startIllustration() {
 	// Prompt: sorting algorithm
 	arrLen := 5
 	items := []string{
-		"Bubble",
-		"Selection",
-		"Insert",
-		"Heap",
-		"Shell",
-		"Merge",
-		"Quick",
-		"Counting",
-		"Bucket",
-		"Radix",
+		"Bubblesort",
+		"Heapsort",
+		"Mergesort",
+		"Quicksort",
+	}
+
+	algorithms := map[string]func() func([]int) (bool, bool){
+		"Bubblesort": bubbleSort,
+		"Heapsort":   heapSort,
 	}
 
 	algPC := promptContent{
 		"Please choose the sorting algorithm. ",
 		"Which algorithm would you choose? ",
 	}
-	_ = promptGetSelect(items, algPC)
+	chosenItem := promptGetSelect(items, algPC)
 
 	// Generate array of ints
 	arr := generateRandomArray(arrLen)
@@ -160,7 +159,7 @@ func startIllustration() {
 	ap := algoProcess{
 		original: original,
 		current:  arr,
-		stepSort: bubbleSort(),
+		stepSort: algorithms[chosenItem](),
 	}
 
 	for !ap.done {
@@ -214,18 +213,8 @@ func isEqual(a, b []int) bool {
 func bubbleSort() func(arr []int) (bool, bool) {
 	i, j := 0, 1
 
-	return func(arr []int) (bool, bool) {
-		changed := false
-
-		if !(i < len(arr)) {
-			return true, changed
-		}
-
-		if !(j < len(arr)-i) {
-			i++
-			j = 1
-			return false, changed
-		}
+	return func(arr []int) (finished bool, changed bool) {
+		changed = false
 
 		if arr[j] < arr[j-1] {
 			arr[j], arr[j-1] = arr[j-1], arr[j]
@@ -233,6 +222,80 @@ func bubbleSort() func(arr []int) (bool, bool) {
 		}
 
 		j++
+
+		if !(j < len(arr)-i) {
+			i++
+
+			if !(i < len(arr)) {
+				return true, changed
+			}
+
+			j = 1
+		}
+
 		return false, changed
+	}
+}
+
+func heapSort() func(arr []int) (bool, bool) {
+	var i int
+	var step int
+	return func(arr []int) (finished bool, changed bool) {
+		// Step 0: initialization
+		if step == 0 {
+			// Parent of the last element in the array (which is a leaf)
+			i = ((len(arr) - 1) - 1) / 2
+			step = 1
+		}
+
+		// Step 1: heapify
+		if step == 1 {
+			if !(i >= 0) {
+				// reset values for step 2
+				step = 2
+				i = len(arr) - 1
+				return false, false
+			}
+
+			siftDown(arr, i, len(arr)-1)
+
+			i--
+			return false, true
+		}
+
+		// Step 2: sorting process
+		if step == 2 {
+			arr[0], arr[i] = arr[i], arr[0]
+			i--
+			siftDown(arr, 0, i)
+
+			if !(i > 0) {
+				return true, true
+			}
+
+			return false, true
+		}
+
+		return false, false
+	}
+}
+
+func siftDown(heap []int, lo, hi int) {
+	root := lo
+	for {
+		child := root*2 + 1
+		if child > hi {
+			break
+		}
+		if child+1 < hi && heap[child] < heap[child+1] {
+			child++
+		}
+		if heap[root] < heap[child] {
+			heap[root], heap[child] = heap[child], heap[root]
+			root = child
+		} else {
+			break
+		}
+
 	}
 }
