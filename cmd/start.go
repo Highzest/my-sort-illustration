@@ -142,13 +142,14 @@ func startIllustration() {
 		"Bubblesort",
 		"Heapsort",
 		"Mergesort",
-		//"Quicksort",
+		"Quicksort",
 	}
 
 	algorithms := map[string]func(original []int) func([]int) (bool, bool){
 		"Bubblesort": bubbleSort,
 		"Heapsort":   heapSort,
 		"Mergesort":  mergeSort,
+		"Quicksort":  quickSort,
 	}
 
 	algPC := promptContent{
@@ -320,18 +321,20 @@ func siftDown(heap []int, lo, hi int) {
 	}
 }
 
-type mergeSortStep struct {
+// sortStep is a snapshot of a recursive execution of a sorting algorithm.
+type sortStep struct {
 	leftBeg, leftEnd, rightBeg, rightEnd int
 }
 
-type mergeSortPath struct {
-	path     []mergeSortStep
+// sortPath is a collection of all snapshots of a recursive execution of a sorting algorithm.
+type sortPath struct {
+	path     []sortStep
 	currStep int
 }
 
 // calculateMergeSortPath traverses indices just like the Merge Sort algorithm would
-// in order to populate every mergeSortPath's mergeSortStep with all the merge function's argument values.
-func (m *mergeSortPath) calculateMergeSortPath(indices []int) {
+// in order to populate every sortPath's sortStep with all the merge function's argument values.
+func (m *sortPath) calculateMergeSortPath(indices []int) {
 	if len(indices) <= 1 {
 		return
 	}
@@ -340,7 +343,7 @@ func (m *mergeSortPath) calculateMergeSortPath(indices []int) {
 	m.calculateMergeSortPath(indices[:middle])
 	m.calculateMergeSortPath(indices[middle:])
 
-	m.path = append(m.path, mergeSortStep{
+	m.path = append(m.path, sortStep{
 		indices[0],
 		indices[middle-1] + 1,
 		indices[middle],
@@ -348,34 +351,34 @@ func (m *mergeSortPath) calculateMergeSortPath(indices []int) {
 	})
 }
 
-func (m *mergeSortPath) iterateStep() {
+func (m *sortPath) iterateStep() {
 	m.currStep++
 }
 
-func (m *mergeSortPath) isEnd() bool {
+func (m *sortPath) isEnd() bool {
 	return m.currStep == len(m.path)
 }
 
-func (m *mergeSortPath) getLeftBeg() int {
+func (m *sortPath) getLeftBeg() int {
 	return m.path[m.currStep].leftBeg
 }
 
-func (m *mergeSortPath) getLeftEnd() int {
+func (m *sortPath) getLeftEnd() int {
 	return m.path[m.currStep].leftEnd
 }
 
-func (m *mergeSortPath) getRightBeg() int {
+func (m *sortPath) getRightBeg() int {
 	return m.path[m.currStep].rightBeg
 }
 
-func (m *mergeSortPath) getRightEnd() int {
+func (m *sortPath) getRightEnd() int {
 	return m.path[m.currStep].rightEnd
 }
 
 // mergeSort is an "iterative" implementation of the Merge Sort sorting algorithm.
 func mergeSort(original []int) func(arr []int) (bool, bool) {
 	var seq []int
-	m := mergeSortPath{[]mergeSortStep{}, 0}
+	m := sortPath{[]sortStep{}, 0}
 
 	// generate sequence 0 to length-1
 	for i := 0; i < len(original); i++ {
@@ -426,4 +429,72 @@ func merge(left, right []int) []int {
 	}
 
 	return result
+}
+
+// quickSort is an "iterative" implementation of the Quick Sort sorting algorithm.
+func quickSort(original []int) func(arr []int) (bool, bool) {
+	m := sortPath{[]sortStep{}, 0}
+	m.path = append(m.path, sortStep{
+		leftBeg:  0,
+		leftEnd:  0,
+		rightBeg: 0,
+		rightEnd: len(original) - 1,
+	})
+
+	return func(arr []int) (finished bool, changed bool) {
+		if len(m.path) < 1 {
+			return true, false
+		}
+
+		// Pop from stack
+		top := len(m.path) - 1
+		lo, hi := m.path[top].leftBeg, m.path[top].rightEnd
+		m.path[top] = sortStep{}
+		m.path = m.path[:top]
+
+		if lo > hi {
+			return false, false
+		}
+
+		p, changed := partition(arr, lo, hi)
+
+		// Push to stack
+		m.path = append(m.path, sortStep{
+			leftBeg:  p + 1,
+			leftEnd:  0,
+			rightBeg: 0,
+			rightEnd: hi,
+		})
+		m.path = append(m.path, sortStep{
+			leftBeg:  lo,
+			leftEnd:  0,
+			rightBeg: 0,
+			rightEnd: p - 1,
+		})
+
+		return false, changed
+	}
+}
+
+func partition(a []int, lo, hi int) (int, bool) {
+	changed := false
+	p := a[hi]
+
+	for j := lo; j < hi; j++ {
+		if a[j] < p {
+			a[j], a[lo] = a[lo], a[j]
+
+			if j != lo {
+				changed = true
+			}
+			lo++
+		}
+	}
+
+	a[lo], a[hi] = a[hi], a[lo]
+	if lo != hi {
+		changed = true
+	}
+
+	return lo, changed
 }

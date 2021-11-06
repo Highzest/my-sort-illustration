@@ -134,3 +134,32 @@ func TestMergeSort(t *testing.T) {
 		}
 	})
 }
+
+func TestQuickSort(t *testing.T) {
+	t.Run("simple case", func(t *testing.T) {
+		snapshots := [][]int{
+			{5, 3, 2, 1, 7, 10, 6}, // initial array
+			{5, 3, 2, 1, 6, 10, 7},
+			{1, 3, 2, 5, 6, 10, 7},
+			{1, 2, 3, 5, 6, 10, 7},
+			{1, 2, 3, 5, 6, 7, 10}, // already sorted at this step
+			{1, 2, 3, 5, 6, 7, 10}, // second time is required since the algorithm needs to end
+		}
+
+		current := make([]int, len(snapshots[0]))
+		copy(current, snapshots[0])
+
+		ap := algoProcess{
+			current:  current,
+			stepSort: quickSort(snapshots[0]),
+		}
+		i := 1
+
+		for !ap.done {
+			if guessed := ap.next(snapshots[i]); !guessed {
+				t.Fatalf("failed at step %d, the snapshot was %v", i, snapshots[i])
+			}
+			i++
+		}
+	})
+}
