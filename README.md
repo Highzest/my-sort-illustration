@@ -1,8 +1,9 @@
 
 # My sort illustration
 
-Personal project for mastering sorting algorithms. 
-A command line application that demonstrates various sorting algorithms.
+Personal project for mastering important sorting algorithms. 
+A command line application that demonstrates various sorting algorithms 
+by allowing the user to guess the next step of the algorithm.
 
 
 
@@ -11,8 +12,12 @@ A command line application that demonstrates various sorting algorithms.
 ## Features
 
 - Uses [cobra](https://github.com/spf13/cobra) for the cli
-- Step by step demonstration of the process
-- Pause, Continue, Next actions for detailed examination
-- Provides info for the algorithms: type, time complexity, space complexity, stability
+- Demonstration of the process by guessing the next changed step (version) of the sorting algorithm
+- Utilizes common interface for controlling the step by step execution of the algorithm
+- Sorting algorithms are unit tested
 
-  
+
+## Notes
+- Some code of the sorting algorithms were taken from [this website](https://www.tutorialdocs.com/article/golang-sort-algorithms.html)
+- Quicksort partition function implementation was taken from [this gist](https://gist.github.com/imwally/58d6bb9bf9da098064054f73a19cdca1)
+- Mergesort implementation is desired to be more idiomatic and cleaner
